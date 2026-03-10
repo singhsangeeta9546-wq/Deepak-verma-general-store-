@@ -1,0 +1,416 @@
+<!DOCTYPE html><html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Deepak Verma General Store</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet"><style>
+
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+
+body{background:#f5f6fa;color:#333}
+
+header{
+background:#2c7a7b;
+color:white;
+padding:20px;
+text-align:center;
+}
+
+header button{
+margin-top:10px;
+padding:6px 12px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.search-box{text-align:center;padding:15px}
+
+.search-box input{
+padding:10px;
+width:90%;
+max-width:400px;
+border-radius:8px;
+border:1px solid #ccc
+}
+
+.filters{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+justify-content:center;
+padding:10px
+}
+
+.filters button{
+padding:8px 14px;
+border:none;
+border-radius:20px;
+background:#e2e8f0;
+cursor:pointer
+}
+
+.container{max-width:1200px;margin:auto;padding:15px}
+
+.products{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:15px
+}
+
+.card{
+background:white;
+border-radius:10px;
+padding:10px;
+box-shadow:0 2px 10px rgba(0,0,0,.08);
+display:flex;
+flex-direction:column
+}
+
+.card img{
+width:100%;
+height:130px;
+object-fit:cover;
+border-radius:8px
+}
+
+.price{color:#2c7a7b;font-weight:600}
+
+.desc{font-size:12px;color:#777}
+
+.card button{
+margin-top:auto;
+background:#2c7a7b;
+border:none;
+color:white;
+padding:8px;
+border-radius:6px;
+cursor:pointer
+}
+
+.cart-icon{
+position:fixed;
+bottom:20px;
+right:20px;
+background:#2c7a7b;
+color:white;
+width:60px;
+height:60px;
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:22px;
+cursor:pointer
+}
+
+.cart-count{
+position:absolute;
+top:-5px;
+right:-5px;
+background:red;
+color:white;
+padding:3px 6px;
+border-radius:50%;
+font-size:12px
+}
+
+.cart-modal{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000000aa;
+display:none;
+align-items:center;
+justify-content:center
+}
+
+.cart-box{
+background:white;
+padding:20px;
+width:90%;
+max-width:500px;
+border-radius:10px;
+max-height:90%;
+overflow:auto
+}
+
+.qty-btn{padding:2px 8px;border:none;background:#ddd;cursor:pointer}
+
+.remove{color:red;cursor:pointer}
+
+.checkout{
+width:100%;
+margin-top:10px;
+background:#2c7a7b;
+color:white;
+border:none;
+padding:10px;
+border-radius:6px
+}
+
+form input,form textarea{
+width:100%;
+padding:8px;
+margin:6px 0;
+border:1px solid #ccc;
+border-radius:6px
+}
+
+.whatsapp{
+position:fixed;
+left:20px;
+bottom:20px;
+background:#25D366;
+color:white;
+padding:12px 16px;
+border-radius:30px;
+text-decoration:none
+}
+
+.admin-panel{
+display:none;
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:#000000aa;
+align-items:center;
+justify-content:center
+}
+
+.admin-box{
+background:white;
+padding:20px;
+width:90%;
+max-width:500px;
+border-radius:10px;
+max-height:90%;
+overflow:auto
+}
+
+</style></head><body><header>
+<h1>Deepak Verma General Store</h1>
+<p>Fresh groceries delivered to your door</p>
+<button onclick="openAdmin()">Admin</button>
+</header><div class="search-box">
+<input type="text" id="searchInput" placeholder="Search products..." onkeyup="searchProducts()">
+</div><div style="text-align:center;padding:10px">
+<h3>Track Your Order</h3>
+<input id="trackID" placeholder="Enter Order ID">
+<button onclick="trackOrder()">Track</button>
+<p id="trackResult"></p>
+</div><div class="filters">
+<button onclick="filterProducts('All')">All</button>
+<button onclick="filterProducts('Groceries')">Groceries</button>
+<button onclick="filterProducts('Dairy')">Dairy</button>
+<button onclick="filterProducts('Snacks')">Snacks</button>
+<button onclick="filterProducts('Beverages')">Beverages</button>
+</div><div class="container">
+<div class="products" id="products"></div>
+</div><div class="cart-icon" onclick="openCart()">
+🛒
+<span class="cart-count" id="cartCount">0</span>
+</div><div class="cart-modal" id="cartModal">
+<div class="cart-box"><h2>Your Cart</h2><div id="cartItems"></div><div id="total"></div><form action="https://formspree.io/f/xzdallag" method="POST" onsubmit="prepareOrder()"><input name="name" placeholder="Customer Name" required>
+<input name="phone" placeholder="Phone Number" required>
+<textarea name="address" placeholder="Delivery Address" required></textarea>
+<textarea name="instructions" placeholder="Instructions"></textarea><input type="hidden" name="order_details" id="orderDetails"><button class="checkout">Place Order</button>
+
+</form></div>
+</div><a class="whatsapp" href="https://wa.me/919532348678" target="_blank">Chat on WhatsApp</a>
+
+<div id="invoiceModal" class="cart-modal">
+<div class="cart-box">
+<h2>Invoice</h2>
+<div id="invoiceContent"></div>
+<button onclick="window.print()">Print</button>
+<button onclick="closeInvoice()">Close</button>
+</div>
+</div><div class="admin-panel" id="adminPanel"><div class="admin-box"><h2>Admin Login</h2><input id="adminPass" placeholder="Password"><button onclick="loginAdmin()">Login</button>
+
+<div id="adminContent" style="display:none"><h3>Add Product</h3><input id="pName" placeholder="Product Name">
+<input id="pPrice" placeholder="Price">
+<input id="pCategory" placeholder="Category">
+<input id="pImg" placeholder="Image URL">
+<input id="pDesc" placeholder="Description"><button onclick="addProduct()">Add Product</button>
+
+<h3>Sales Dashboard</h3><p id="totalOrders"></p>
+<p id="totalRevenue"></p><div id="orderList"></div></div><button onclick="closeAdmin()">Close</button>
+
+</div>
+</div><script>
+
+const ADMIN_PASSWORD="1234"
+
+let products=[
+{id:1,name:"Aashirvaad Atta",price:280,category:"Groceries",img:"https://i.ibb.co/9pK0bYF/atta.jpg",desc:"Whole wheat flour"},
+{id:2,name:"Amul Butter",price:280,category:"Dairy",img:"https://i.ibb.co/ZYW3VTp/butter.jpg",desc:"Fresh butter"},
+{id:3,name:"Milk 1L",price:65,category:"Dairy",img:"https://i.ibb.co/Y8d0KpY/milk.jpg",desc:"Pure milk"},
+{id:4,name:"Tata Salt",price:28,category:"Groceries",img:"https://i.ibb.co/zr6nH9m/salt.jpg",desc:"Iodized salt"},
+{id:5,name:"Maggi",price:14,category:"Snacks",img:"https://i.ibb.co/x5nKc8J/maggi.jpg",desc:"Instant noodles"},
+{id:6,name:"Parle G",price:10,category:"Snacks",img:"https://i.ibb.co/jr0Fh9x/parleg.jpg",desc:"Biscuits"},
+{id:7,name:"Lays",price:20,category:"Snacks",img:"https://i.ibb.co/vqQKQ7h/lays.jpg",desc:"Potato chips"},
+{id:8,name:"Coca Cola",price:40,category:"Beverages",img:"https://i.ibb.co/h2k6Z0N/coke.jpg",desc:"Cold drink"}
+]
+
+let cart=JSON.parse(localStorage.getItem("cart"))||[]
+
+function renderProducts(list){
+let container=document.getElementById("products")
+container.innerHTML=""
+list.forEach(p=>{
+container.innerHTML+=`
+<div class="card">
+<img src="${p.img}" loading="lazy">
+<h3>${p.name}</h3>
+<div class="price">₹${p.price}</div>
+<div class="desc">${p.desc}</div>
+<button onclick="addToCart(${p.id})">Add to Cart</button>
+</div>`
+})
+}
+
+renderProducts(products)
+
+function searchProducts(){
+let k=document.getElementById("searchInput").value.toLowerCase()
+renderProducts(products.filter(p=>p.name.toLowerCase().includes(k)))
+}
+
+function filterProducts(c){
+if(c==="All")renderProducts(products)
+else renderProducts(products.filter(p=>p.category===c))
+}
+
+function addToCart(id){
+let item=cart.find(i=>i.id===id)
+if(item)item.qty++
+else cart.push({id,qty:1})
+localStorage.setItem("cart",JSON.stringify(cart))
+updateCartCount()
+}
+
+function updateCartCount(){
+document.getElementById("cartCount").innerText=cart.reduce((a,b)=>a+b.qty,0)
+}
+
+updateCartCount()
+
+function openCart(){
+document.getElementById("cartModal").style.display="flex"
+let c=document.getElementById("cartItems")
+c.innerHTML=""
+let total=0
+cart.forEach(item=>{
+let p=products.find(x=>x.id===item.id)
+let sub=p.price*item.qty
+total+=sub
+c.innerHTML+=`${p.name} x ${item.qty} = ₹${sub}<br>`
+})
+document.getElementById("total").innerText="Total ₹"+total
+}
+
+function prepareOrder(){
+
+let name=document.querySelector("input[name=name]").value
+let phone=document.querySelector("input[name=phone]").value
+let address=document.querySelector("textarea[name=address]").value
+
+let orderID="ORD"+Date.now()
+
+let total=0
+let html=""
+
+cart.forEach(item=>{
+let p=products.find(x=>x.id===item.id)
+let sub=p.price*item.qty
+total+=sub
+html+=`<p>${p.name} x ${item.qty} = ₹${sub}</p>`
+})
+
+document.getElementById("invoiceContent").innerHTML=
+`<p><b>Order ID:</b> ${orderID}</p>
+<p>${name}</p>
+<p>${phone}</p>
+<p>${address}</p>
+<hr>
+${html}
+<h3>Total ₹${total}</h3>`
+
+document.getElementById("invoiceModal").style.display="flex"
+
+let orders=JSON.parse(localStorage.getItem("orders"))||[]
+
+orders.push({id:orderID,total:total,status:"Pending"})
+
+localStorage.setItem("orders",JSON.stringify(orders))
+
+}
+
+function closeInvoice(){
+document.getElementById("invoiceModal").style.display="none"
+}
+
+function trackOrder(){
+let id=document.getElementById("trackID").value
+let orders=JSON.parse(localStorage.getItem("orders"))||[]
+let o=orders.find(x=>x.id===id)
+document.getElementById("trackResult").innerText=o?("Status: "+o.status):"Order not found"
+}
+
+function openAdmin(){
+document.getElementById("adminPanel").style.display="flex"
+}
+
+function closeAdmin(){
+document.getElementById("adminPanel").style.display="none"
+}
+
+function loginAdmin(){
+if(document.getElementById("adminPass").value===ADMIN_PASSWORD){
+document.getElementById("adminContent").style.display="block"
+loadDashboard()
+}else alert("Wrong password")
+}
+
+function loadDashboard(){
+
+let orders=JSON.parse(localStorage.getItem("orders"))||[]
+
+document.getElementById("totalOrders").innerText="Orders: "+orders.length
+
+let revenue=0
+orders.forEach(o=>revenue+=o.total)
+
+document.getElementById("totalRevenue").innerText="Revenue ₹"+revenue
+
+let html=""
+orders.forEach(o=>{
+html+=`${o.id} ₹${o.total} ${o.status}<br>`
+})
+
+document.getElementById("orderList").innerHTML=html
+
+}
+
+function addProduct(){
+
+let p={
+id:Date.now(),
+name:pName.value,
+price:Number(pPrice.value),
+category:pCategory.value,
+img:pImg.value,
+desc:pDesc.value
+}
+
+products.push(p)
+
+renderProducts(products)
+
+}
+
+</script></body>
+  </html>
