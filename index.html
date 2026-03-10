@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Deepak Verma General Store</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f6f6f6;
+}
+
+header{
+background:#0c831f;
+color:white;
+padding:15px;
+text-align:center;
+}
+
+.container{
+padding:15px;
+max-width:1100px;
+margin:auto;
+}
+
+.search{
+width:100%;
+padding:10px;
+margin-bottom:10px;
+}
+
+.products{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+gap:15px;
+}
+
+.card{
+background:white;
+padding:10px;
+border-radius:10px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+.card img{
+width:100%;
+height:120px;
+object-fit:cover;
+border-radius:6px;
+}
+
+.price{
+color:#0c831f;
+font-weight:bold;
+}
+
+button{
+background:#0c831f;
+color:white;
+border:none;
+padding:6px 10px;
+border-radius:5px;
+cursor:pointer;
+}
+
+.cart{
+position:fixed;
+right:0;
+top:0;
+width:300px;
+height:100%;
+background:white;
+padding:10px;
+overflow:auto;
+box-shadow:-3px 0 10px rgba(0,0,0,0.2);
+display:none;
+}
+
+.admin{
+background:white;
+padding:10px;
+margin-top:20px;
+border-radius:8px;
+}
+
+.order-tracker{
+display:flex;
+justify-content:space-between;
+margin-top:20px;
+}
+
+.step{
+text-align:center;
+flex:1;
+}
+
+.icon{
+font-size:24px;
+}
+
+.active{
+color:#0c831f;
+font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>Deepak Verma General Store</h2>
+<p>Fresh groceries delivered to your door</p>
+</header>
+
+<div class="container">
+
+<input class="search" id="search" placeholder="Search products" onkeyup="searchProducts()">
+
+<div class="products" id="products"></div>
+
+</div>
+
+<button onclick="toggleCart()" style="position:fixed;bottom:20px;right:20px;">Cart</button>
+
+<div class="cart" id="cart">
+
+<h3>Cart</h3>
+
+<div id="cartItems"></div>
+
+<p>Total ₹<span id="total">0</span></p>
+
+<select id="payment">
+<option>Cash on Delivery</option>
+<option>UPI</option>
+</select>
+
+<input id="name" placeholder="Customer name">
+<input id="phone" placeholder="Phone">
+<input id="address" placeholder="Address">
+
+<button onclick="placeOrder()">Place Order</button>
+
+</div>
+
+<div class="container">
+
+<h3>Track Order</h3>
+
+<input id="trackId" placeholder="Enter Order ID">
+<button onclick="trackOrder()">Track</button>
+
+<div id="trackResult"></div>
+
+<div class="order-tracker">
+
+<div class="step" id="s1">
+<div class="icon">🛒</div>
+Order Placed
+</div>
+
+<div class="step" id="s2">
+<div class="icon">📦</div>
+Dispatched
+</div>
+
+<div class="step" id="s3">
+<div class="icon">🚚</div>
+Out for Delivery
+</div>
+
+<div class="step" id="s4">
+<div class="icon">✅</div>
+Delivered
+</div>
+
+</div>
+
+</div>
+
+<div class="container admin">
+
+<h3>Admin Login</h3>
+
+<input id="adminUser" placeholder="username">
+<input id="adminPass" type="password" placeholder="password">
+
+<button onclick="adminLogin()">Login</button>
+
+<div id="adminPanel" style="display:none">
+
+<h3>Product Manager</h3>
+
+<input id="pname" placeholder="Product name">
+<input id="pprice" placeholder="Price">
+<input id="pstock" placeholder="Stock">
+<input id="pimg" placeholder="Image url">
+
+<button onclick="addProduct()">Add Product</button>
+
+<div id="adminProducts"></div>
+
+<h3>Orders</h3>
+
+<div id="orders"></div>
+
+</div>
+
+</div>
+
+<script>
+
+let defaultProducts=[
+{name:"Aashirvaad Atta",price:280,stock:20,img:"https://source.unsplash.com/200x150/?flour"},
+{name:"Rice",price:90,stock:30,img:"https://source.unsplash.com/200x150/?rice"},
+{name:"Sugar",price:45,stock:20,img:"https://source.unsplash.com/200x150/?sugar"},
+{name:"Salt",price:20,stock:40,img:"https://source.unsplash.com/200x150/?salt"},
+{name:"Cooking Oil",price:180,stock:15,img:"https://source.unsplash.com/200x150/?oil"},
+{name:"Milk",price:60,stock:20,img:"https://source.unsplash.com/200x150/?milk"},
+{name:"Butter",price:280,stock:10,img:"https://source.unsplash.com/200x150/?butter"},
+{name:"Paneer",price:200,stock:10,img:"https://source.unsplash.com/200x150/?paneer"},
+{name:"Biscuits",price:10,stock:50,img:"https://source.unsplash.com/200x150/?biscuits"},
+{name:"Chips",price:20,stock:50,img:"https://source.unsplash.com/200x150/?chips"}
+]
+
+for(let i=1;i<=40;i++){
+defaultProducts.push({
+name:"Grocery Item "+i,
+price:20+i,
+stock:50,
+img:"https://source.unsplash.com/200x150/?grocery"
+})
+}
+
+let products=JSON.parse(localStorage.getItem("products"))||defaultProducts
+let cart=[]
+let orders=JSON.parse(localStorage.getItem("orders"))||[]
+
+function renderProducts(list){
+
+let html=""
+
+list.forEach((p,i)=>{
+
+html+=`
+<div class="card">
+<img src="${p.img}">
+<h4>${p.name}</h4>
+<p class="price">₹${p.price}</p>
+<p>Stock: ${p.stock}</p>
+${p.stock>0?`<button onclick="addCart(${i})">Add</button>`:`Out of Stock`}
+</div>
+`
+
+})
+
+document.getElementById("products").innerHTML=html
+
+}
+
+function searchProducts(){
+
+let q=document.getElementById("search").value.toLowerCase()
+
+renderProducts(products.filter(p=>p.name.toLowerCase().includes(q)))
+
+}
+
+function addCart(i){
+
+if(products[i].stock<=0) return
+
+cart.push(products[i])
+
+products[i].stock--
+
+renderProducts(products)
+updateCart()
+
+}
+
+function updateCart(){
+
+let html=""
+let total=0
+
+cart.forEach((p,i)=>{
+
+total+=p.price
+
+html+=`
+<p>${p.name} ₹${p.price}
+<button onclick="removeCart(${i})">x</button>
+</p>
+`
+
+})
+
+document.getElementById("cartItems").innerHTML=html
+document.getElementById("total").innerText=total
+
+}
+
+function removeCart(i){
+
+cart.splice(i,1)
+updateCart()
+
+}
+
+function toggleCart(){
+
+let c=document.getElementById("cart")
+
+c.style.display=c.style.display=="block"?"none":"block"
+
+}
+
+function generateId(){
+
+return "ORD"+Math.floor(Math.random()*90000)
+
+}
+
+function placeOrder(){
+
+let order={
+id:generateId(),
+name:name.value,
+phone:phone.value,
+address:address.value,
+items:cart,
+total:document.getElementById("total").innerText,
+payment:payment.value,
+status:"Order Placed"
+}
+
+orders.push(order)
+
+localStorage.setItem("orders",JSON.stringify(orders))
+
+alert("Order ID: "+order.id)
+
+cart=[]
+updateCart()
+
+}
+
+function trackOrder(){
+
+let id=document.getElementById("trackId").value
+
+let o=orders.find(x=>x.id==id)
+
+if(!o){
+
+trackResult.innerHTML="Order not found"
+return
+
+}
+
+trackResult.innerHTML="Status: "+o.status
+
+updateTracker(o.status)
+
+}
+
+function updateTracker(status){
+
+let steps=["Order Placed","Dispatched","Out for Delivery","Delivered"]
+
+steps.forEach((s,i)=>{
+
+document.getElementById("s"+(i+1)).classList.remove("active")
+
+})
+
+let index=steps.indexOf(status)
+
+for(let i=0;i<=index;i++){
+document.getElementById("s"+(i+1)).classList.add("active")
+}
+
+}
+
+function adminLogin(){
+
+if(adminUser.value=="admin" && adminPass.value=="1234"){
+
+adminPanel.style.display="block"
+showAdminProducts()
+showOrders()
+
+}else{
+
+alert("Wrong login")
+
+}
+
+}
+
+function addProduct(){
+
+let p={
+name:pname.value,
+price:parseInt(pprice.value),
+stock:parseInt(pstock.value),
+img:pimg.value
+}
+
+products.push(p)
+
+localStorage.setItem("products",JSON.stringify(products))
+
+renderProducts(products)
+
+showAdminProducts()
+
+}
+
+function showAdminProducts(){
+
+let html=""
+
+products.forEach((p,i)=>{
+
+html+=`
+<p>
+${p.name} ₹${p.price} Stock:${p.stock}
+<button onclick="deleteProduct(${i})">Delete</button>
+</p>
+`
+
+})
+
+adminProducts.innerHTML=html
+
+}
+
+function deleteProduct(i){
+
+products.splice(i,1)
+
+localStorage.setItem("products",JSON.stringify(products))
+
+renderProducts(products)
+
+showAdminProducts()
+
+}
+
+function showOrders(){
+
+let html=""
+
+orders.forEach((o,i)=>{
+
+html+=`
+<div>
+<b>${o.id}</b> ${o.name} ₹${o.total}
+<br>
+Status:${o.status}
+<button onclick="updateStatus(${i})">Update</button>
+</div>
+`
+
+})
+
+document.getElementById("orders").innerHTML=html
+
+}
+
+function updateStatus(i){
+
+let s=prompt("Enter status")
+
+orders[i].status=s
+
+localStorage.setItem("orders",JSON.stringify(orders))
+
+showOrders()
+
+}
+
+renderProducts(products)
+
+</script>
+
+</body>
+  </html>
